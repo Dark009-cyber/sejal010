@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Surprise for Sejal!</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f1022;
+            --bg-light: #1c1d3a;
+            --card: #11121f;
+            --accent: #ff6b81;
+            --accent-light: #ff9ab3;
+            --text-primary: #eaf0ff;
+            --text-secondary: #9fb0d6;
+            --note-bg: #fffef2;
+            --note-text: #2c2828;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(180deg, #071028 0%, var(--bg-dark) 60%);
+            color: var(--text-primary);
+            overflow: auto;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* --- Password Overlay --- */
+        #password-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            transition: opacity 0.5s ease-out;
+        }
+        .password-box {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 28px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 380px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+            text-align: center;
+        }
+        .password-box h2 { margin: 0 0 8px; font-size: 22px; }
+        .password-box p { margin: 0 0 18px; color: var(--text-secondary); }
+        .password-box input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0,0,0,0.2);
+            color: inherit;
+            font-size: 16px;
+            text-align: center;
+        }
+        .password-box button {
+            margin-top: 16px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            border: 0;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            color: var(--bg-dark);
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .password-box button:hover { transform: scale(1.05); }
+
+        /* --- Main Content --- */
+        #main-container {
+            max-width: 960px;
+            margin: 40px auto;
+            padding: 30px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .hero { display: flex; gap: 30px; align-items: flex-start; }
+        .greeting-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            padding: 28px;
+            border-radius: 14px;
+            flex: 1;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .greeting-card h1 {
+            font-size: 48px;
+            margin: 0 0 6px;
+            font-family: 'Dancing Script', cursive;
+        }
+        .greeting-card p.lead { margin: 0 0 16px; color: var(--text-secondary); }
+
+        /* --- Note Styling --- */
+        .note {
+            margin-top: 18px;
+            padding: 24px;
+            border-radius: 12px;
+            background: linear-gradient(180deg, var(--note-bg), #fff6df);
+            color: var(--note-text);
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        .note h3 { margin: 0 0 8px; color: var(--accent); }
+        .note .letter {
+            white-space: pre-wrap;
+            font-size: 17px;
+            line-height: 1.6;
+            min-height: 200px;
+            outline: none;
+            font-family: 'Dancing Script', cursive;
+        }
+        .note-controls { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
+        .btn { padding: 10px 16px; border-radius: 10px; border: 0; cursor: pointer; font-weight: 700; transition: all 0.2s ease; }
+        .btn-primary { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: var(--bg-dark); }
+        .btn-ghost { background: transparent; border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-primary); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        .details-card {
+            width: 260px;
+            text-align: center;
+            padding: 24px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .details-card .label { font-size: 14px; color: var(--text-secondary); margin-bottom: 10px; }
+        .details-card .date { font-weight: 800; font-size: 32px; color: var(--accent); }
+
+        /* --- Surprise Modal --- */
+        #surprise-modal {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 16, 34, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        #surprise-modal.visible { opacity: 1; pointer-events: all; }
+        .surprise-content {
+            width: 90vw;
+            height: 85vh;
+            max-width: 1200px;
+            position: relative;
+        }
+        #photo-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        #photo-canvas:active { cursor: grabbing; }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 210;
+        }
+        
+        @media (max-width: 768px) {
+            .hero { flex-direction: column; }
+            .details-card { width: 100%; box-sizing: border-box; margin-top: 20px; }
+            .greeting-card h1 { font-size: 36px; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bgm" src="birthday_song.mp3" loop></audio>
+
+    <div id="password-overlay">
+        <div class="password-box">
+            <h2>A Surprise Awaits</h2>
+            <p>To unlock Sejal's birthday message, please enter the secret password.</p>
+            <input type="password" id="password-input" placeholder="••••••••" autocomplete="off" />
+            <button id="unlock-btn">Unlock Surprise</button>
+        </div>
+    </div>
+
+    <div id="main-container">
+        <div class="hero">
+            <div class="greeting-card">
+                <h1 id="title-text">Happy Birthday, Jaan! 🎉</h1>
+                <p class="lead">A little something made with ♥ for my one and only, <strong id="name-placeholder">Sejal</strong>.</p>
+                <div class="note">
+                    <h3>An Open Letter to You:</h3>
+                    <div class="letter" id="letter-content" contenteditable="true" aria-label="Birthday note"></div>
+                </div>
+                <div class="note-controls">
+                    <button class="btn btn-primary" id="save-note-btn">Save as Text</button>
+                    <button class="btn btn-ghost" id="reset-note-btn">Reset Note</button>
+                </div>
+            </div>
+            <div class="details-card">
+                <div class="label">Birthday</div>
+                <div class="date" id="bday-date">15 September</div>
+                <div style="margin-top: 24px;">
+                    <button class="btn btn-primary" id="surprise-btn">Click for the best part!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="surprise-modal">
+        <button id="close-surprise-btn" class="close-btn">&times;</button>
+        <div class="surprise-content">
+            <canvas id="photo-canvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // --- User Variables & Initial Content ---
+        const love_name = "Sejal";
+        const relationship = "my love, jaan, whole universe 🌌";
+        const birthday_date = "15 September";
+
+        function generate_birthday_letter(name, relationship, birthday_date) {
+            return `🌹 My Dearest ${name},\n\nToday, ${birthday_date}, marks the most beautiful day – the day you came into this world and later, into my life. You are ${relationship}, my everything, the reason my heart beats, and the light that brightens my soul.\n\nI am endlessly grateful for your love, your smile, and the way you make every day special. On your special day, I wish you boundless happiness, immense success, and a lifetime full of love and blessings.\n\nMay all your dreams come true, and may your life always be filled with joy.\n\nWith all my love,\nYours Forever`;
+        }
+        
+        const originalLetter = generate_birthday_letter(love_name, relationship, birthday_date);
+        document.getElementById('name-placeholder').textContent = love_name;
+        document.getElementById('bday-date').textContent = birthday_date;
+        document.getElementById('letter-content').textContent = originalLetter;
+
+        // --- Password Logic ---
+        const passwordOverlay = document.getElementById('password-overlay');
+        const passwordInput = document.getElementById('password-input');
+        const unlockBtn = document.getElementById('unlock-btn');
+        const mainContainer = document.getElementById('main-container');
+        const SECRET_PASSWORD = 'my love';
+
+        function unlockSurprise() {
+            if (passwordInput.value.trim().toLowerCase() === SECRET_PASSWORD) {
+                passwordOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    passwordOverlay.style.display = 'none';
+                    mainContainer.style.opacity = '1';
+                    mainContainer.style.transform = 'translateY(0)';
+                    celebrate();
+                    const bgm = document.getElementById('bgm');
+                    bgm.volume = 0.3;
+                    bgm.play().catch(e => console.error("Audio playback failed:", e));
+                }, 500);
+            } else {
+                passwordInput.value = '';
+                passwordInput.placeholder = 'Incorrect! Hint: it\'s a sweet phrase ❤️';
+                passwordInput.focus();
+            }
+        }
+        unlockBtn.addEventListener('click', unlockSurprise);
+        passwordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') unlockSurprise(); });
+
+        // --- Note Controls ---
+        document.getElementById('save-note-btn').addEventListener('click', () => {
+            const text = document.getElementById('letter-content').innerText;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Note_for_${love_name}.txt`;
+            a.click();
+        });
+        document.getElementById('reset-note-btn').addEventListener('click', () => {
+            document.getElementById('letter-content').textContent = originalLetter;
+        });
+        
+        // --- Confetti Celebration ---
+        function celebrate() {
+            for (let i = 0; i < 50; i++) {
+                const dot = document.createElement('div');
+                dot.style.cssText = `position:fixed;width:10px;height:10px;border-radius:50%;left:${Math.random()*100}%;top:${-20}px;opacity:0.9;background:hsl(${Math.random()*360}deg 80% 60%);z-index:9999;pointer-events:none;`;
+                document.body.appendChild(dot);
+                dot.animate([
+                    { transform: `translateY(${window.innerHeight + 20}px) translateX(${Math.random()*200-100}px) rotate(${Math.random()*360}deg)` },
+                ], { duration: Math.random() * 2000 + 3000, easing: 'ease-out' });
+                setTimeout(() => dot.remove(), 5000);
+            }
+        }
+
+        // --- Surprise Modal & 3D Photo Carousel ---
+        const surpriseModal = document.getElementById('surprise-modal');
+        const surpriseBtn = document.getElementById('surprise-btn');
+        const closeSurpriseBtn = document.getElementById('close-surprise-btn');
+        let isCarouselInitialized = false;
+
+        surpriseBtn.addEventListener('click', () => {
+            surpriseModal.classList.add('visible');
+            if (!isCarouselInitialized) {
+                initPhotoCarousel();
+                isCarouselInitialized = true;
+            }
+        });
+        closeSurpriseBtn.addEventListener('click', () => {
+            surpriseModal.classList.remove('visible');
+        });
+        
+        function initPhotoCarousel() {
+            const canvas = document.getElementById('photo-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            camera.position.z = 7.5; 
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+            pointLight.position.set(0, 5, 5);
+            scene.add(pointLight);
+
+            const group = new THREE.Group();
+            scene.add(group);
+
+            const frameWidth = 2.5;
+            const frameHeight = 1.6;
+            const frameGeometry = new THREE.PlaneGeometry(frameWidth, frameHeight);
+            const frameMaterial = new THREE.MeshStandardMaterial({ color: '#11121f' });
+
+            // --- ADDED: Helper function for the main text in the center ---
+            function createCenterTextTexture(line1, line2, width, height) {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const context = canvas.getContext('2d');
+                context.clearRect(0, 0, width, height);
+
+                // Styling for the text
+                context.font = `bold ${height * 0.25}px 'Dancing Script', cursive`;
+                context.fillStyle = '#ff9ab3'; // Using accent-light color
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+
+                // Drop shadow for depth
+                context.shadowColor = "rgba(0,0,0,0.5)";
+                context.shadowOffsetX = 5;
+                context.shadowOffsetY = 5;
+                context.shadowBlur = 10;
+
+                // Draw lines of text
+                context.fillText(line1, width / 2, height * 0.35);
+                context.fillText(line2, width / 2, height * 0.7);
+
+                return new THREE.CanvasTexture(canvas);
+            }
+
+            // --- ADDED: Create and add the center text to the scene ---
+            const centerTextTexture = createCenterTextTexture('Happy Birthday', 'Sejal', 1024, 512);
+            const textPlaneGeo = new THREE.PlaneGeometry(6, 3);
+            const textPlaneMat = new THREE.MeshBasicMaterial({ map: centerTextTexture, transparent: true });
+            const textPlaneMesh = new THREE.Mesh(textPlaneGeo, textPlaneMat);
+            textPlaneMesh.position.set(0, 0, 0); // Positioned at the center
+            scene.add(textPlaneMesh); // Added to the main scene to keep it stationary
+
+
+            function createSideTextTexture(text, width, height) {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const context = canvas.getContext('2d');
+                context.clearRect(0, 0, width, height);
+                
+                const fontSize = height * 0.12;
+                context.font = `bold ${fontSize}px 'Dancing Script', cursive`;
+                context.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                
+                context.save();
+                context.translate(width / 2, height / 2);
+                context.rotate(-Math.PI / 2);
+                
+                const lines = text.split('\n');
+                const lineHeight = fontSize * 1.2;
+                const startY = -((lines.length - 1) * lineHeight) / 2;
+                lines.forEach((line, index) => {
+                    context.fillText(line, 0, startY + (index * lineHeight));
+                });
+                context.restore();
+                
+                return new THREE.CanvasTexture(canvas);
+            }
+
+            const photoData = [
+                { url: './photo1.jpeg', youtubeUrl: 'https://youtu.be/-9ixKAyz-rA?si=AGMLyquMpZXGIVER' },
+                { url: './photo2.jpeg', youtubeUrl: 'https://youtu.be/6VKrB1PYsS8?si=WHeX6j6fvbI0po0f' },
+                { url: './photo3.jpeg', youtubeUrl: 'https://youtu.be/sQaRNpVymsM?si=awERPJ0FOolggpjh' },
+                { url: './photo4.jpeg', youtubeUrl: 'https://www.youtube.com/watch?v=iYy9kr45d1o&list=RDiYy9kr45d1o&start_radio=1' }
+            ];
+            
+            const numPhotos = photoData.length;
+            const radius = 5; 
+            const angleSpread = Math.PI / 1.8; 
+
+            photoData.forEach((p, i) => {
+                const photoFrameGroup = new THREE.Group();
+                photoFrameGroup.userData.youtubeUrl = p.youtubeUrl;
+
+                const angle = (angleSpread / (numPhotos - 1)) * i - (angleSpread / 2);
+                
+                const x = radius * Math.sin(angle);
+                const z = radius * Math.cos(angle);
+                photoFrameGroup.position.set(x, 0, z);
+
+                photoFrameGroup.rotation.y = angle;
+
+                const background = new THREE.Mesh(frameGeometry, frameMaterial);
+                photoFrameGroup.add(background);
+
+                const edges = new THREE.EdgesGeometry(frameGeometry);
+                const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.3, transparent: true }));
+                line.position.z = 0.005; 
+                photoFrameGroup.add(line);
+
+                new THREE.TextureLoader().load(p.url, (texture) => {
+                    const imageAspect = texture.image.width / texture.image.height;
+                    const frameAspect = frameWidth / frameHeight;
+                    let photoWidth, photoHeight;
+
+                    if (imageAspect > frameAspect) {
+                        photoWidth = frameWidth * 0.95;
+                        photoHeight = photoWidth / imageAspect;
+                    } else {
+                        photoHeight = frameHeight * 0.95;
+                        photoWidth = photoHeight * imageAspect;
+                    }
+
+                    const photoGeo = new THREE.PlaneGeometry(photoWidth, photoHeight);
+                    const photoMat = new THREE.MeshStandardMaterial({ map: texture });
+                    const photoMesh = new THREE.Mesh(photoGeo, photoMat);
+                    photoMesh.position.z = 0.01;
+                    photoFrameGroup.add(photoMesh);
+                    
+                    if (imageAspect < frameAspect) {
+                        const barWidth = (frameWidth - photoWidth) / 2;
+                        if (barWidth > 0.1) {
+                            const resMultiplier = 200;
+                            
+                            const leftTextTexture = createSideTextTexture('Happy\nBirthday', barWidth * resMultiplier, frameHeight * resMultiplier);
+                            const leftTextGeo = new THREE.PlaneGeometry(barWidth, frameHeight);
+                            const leftTextMat = new THREE.MeshBasicMaterial({ map: leftTextTexture, transparent: true });
+                            const leftTextMesh = new THREE.Mesh(leftTextGeo, leftTextMat);
+                            leftTextMesh.position.x = -photoWidth / 2 - barWidth / 2;
+                            leftTextMesh.position.z = 0.02;
+                            photoFrameGroup.add(leftTextMesh);
+
+                            const rightTextTexture = createSideTextTexture('Sejal', barWidth * resMultiplier, frameHeight * resMultiplier);
+                            const rightTextGeo = new THREE.PlaneGeometry(barWidth, frameHeight);
+                            const rightTextMat = new THREE.MeshBasicMaterial({ map: rightTextTexture, transparent: true });
+                            const rightTextMesh = new THREE.Mesh(rightTextGeo, rightTextMat);
+                            rightTextMesh.position.x = photoWidth / 2 + barWidth / 2;
+                            rightTextMesh.position.z = 0.02;
+                            photoFrameGroup.add(rightTextMesh);
+                        }
+                    }
+
+                }, undefined, () => console.error('An error occurred loading the texture: ' + p.url));
+                
+                group.add(photoFrameGroup);
+            });
+
+            // --- Mouse Drag Interaction ---
+            let isMouseDown = false;
+            let previousMouseX = 0;
+            canvas.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                previousMouseX = e.clientX;
+            });
+            canvas.addEventListener('mouseup', () => { isMouseDown = false; });
+            canvas.addEventListener('mouseleave', () => { isMouseDown = false; });
+            canvas.addEventListener('mousemove', (e) => {
+                if (isMouseDown) {
+                    const deltaX = e.clientX - previousMouseX;
+                    group.rotation.y += deltaX * 0.005;
+                    previousMouseX = e.clientX;
+                }
+            });
+
+            // --- Click to Open YouTube Link ---
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            canvas.addEventListener('click', (event) => {
+                if (Math.abs(event.clientX - previousMouseX) > 5) {
+                    return;
+                }
+                
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(scene.children, true);
+
+                if (intersects.length > 0) {
+                    let clickedObject = intersects[0].object;
+                    while (clickedObject.parent && !clickedObject.userData.youtubeUrl) {
+                        clickedObject = clickedObject.parent;
+                    }
+                    if (clickedObject.userData.youtubeUrl) {
+                        window.open(clickedObject.userData.youtubeUrl, '_blank');
+                    }
+                }
+            });
+
+            // --- Animation Loop ---
+            function animate() {
+                requestAnimationFrame(animate);
+                if (!isMouseDown) {
+                    group.rotation.y += 0.001; // Slower rotation for the arc view
+                }
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // --- Handle Resize ---
+            window.addEventListener('resize', () => {
+                const container = document.querySelector('.surprise-content');
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+    </script>
+</body>
+</html>
+
